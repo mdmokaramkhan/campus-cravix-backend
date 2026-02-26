@@ -18,19 +18,32 @@ export async function sendOtp(phoneOrEmail, channel = "phone") {
     { upsert: true, new: true }
   );
 
-  const apiUrl = process.env.OTP_API_URL;
-  if (!apiUrl) {
-    throw new Error("OTP_API_URL missing in .env");
+  if (channel !== "phone") {
+    throw new Error("Only phone OTP delivery is supported");
   }
 
-  const res = await fetch(apiUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ identifier, otp, channel }),
+  const apiKey = process.env.WAPI_API_KEY || process.env.OTP_API_KEY;
+  if (!apiKey) {
+    throw new Error("WAPI_API_KEY (or OTP_API_KEY) missing in .env");
+  }
+
+  const apiUrl = process.env.WAPI_SEND_MSG_URL || "https://Wapi.spdpay.in/api/v2/send_msg";
+  const message = `Your CampusCravix OTP is ${otp}. It expires in ${expiresInMinutes} minutes.`;
+  const params = new URLSearchParams({
+    "api-key": apiKey,
+    number: identifier,
+    message,
   });
+
+  const res = await fetch(`${apiUrl}?${params.toString()}`, { method: "GET" });
 
   if (!res.ok) {
     throw new Error("Failed to send OTP");
+  }
+
+  const data = await res.json().catch(() => ({}));
+  if (data && data.success === false) {
+    throw new Error(data.message || "Failed to send OTP");
   }
 
   return { success: true };
