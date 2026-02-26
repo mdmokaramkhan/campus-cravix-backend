@@ -1,9 +1,7 @@
 import Vendor from "../models/Vendor.js";
-import cloudinary from "../config/cloudinary.js";
+import { uploadImage, deleteImage } from "../utils/cloudinary.js";
 
-/**
- * GET /vendors/me - Get current vendor's profile
- */
+// Get the logged-in vendor's profile
 export async function getProfile(req, res) {
   try {
     if (!req.user.vendorId) {
@@ -15,10 +13,7 @@ export async function getProfile(req, res) {
 
     const vendor = await Vendor.findById(req.user.vendorId);
     if (!vendor) {
-      return res.status(404).json({
-        success: false,
-        message: "Vendor profile not found",
-      });
+      return res.status(404).json({ success: false, message: "Vendor profile not found" });
     }
 
     res.json({
@@ -41,10 +36,7 @@ export async function getProfile(req, res) {
   }
 }
 
-/**
- * PUT /vendors/me - Update current vendor's profile
- * Accepts JSON body: name, stallNumber, openingHours, isOpen
- */
+// Update vendor's name, stall number, hours, etc.
 export async function updateProfile(req, res) {
   try {
     if (!req.user.vendorId) {
@@ -56,14 +48,12 @@ export async function updateProfile(req, res) {
 
     const vendor = await Vendor.findById(req.user.vendorId);
     if (!vendor) {
-      return res.status(404).json({
-        success: false,
-        message: "Vendor profile not found",
-      });
+      return res.status(404).json({ success: false, message: "Vendor profile not found" });
     }
 
     const { name, stallNumber, openingHours, isOpen } = req.body;
 
+    // Update only the fields that were sent
     if (name !== undefined) vendor.name = name.trim();
     if (stallNumber !== undefined) vendor.stallNumber = stallNumber.trim();
     if (isOpen !== undefined) vendor.isOpen = Boolean(isOpen);
@@ -71,10 +61,7 @@ export async function updateProfile(req, res) {
     if (openingHours !== undefined) {
       const validated = validateOpeningHours(openingHours);
       if (!validated.valid) {
-        return res.status(400).json({
-          success: false,
-          message: validated.error,
-        });
+        return res.status(400).json({ success: false, message: validated.error });
       }
       vendor.openingHours = validated.hours;
     }
@@ -101,10 +88,7 @@ export async function updateProfile(req, res) {
   }
 }
 
-/**
- * PUT /vendors/me/cover - Upload cover image via Cloudinary
- * Expects multipart/form-data with 'coverImage' file field
- */
+// Upload a new cover image (replaces the old one)
 export async function updateCoverImage(req, res) {
   try {
     if (!req.user.vendorId) {
@@ -115,35 +99,16 @@ export async function updateCoverImage(req, res) {
     }
 
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "Cover image file is required",
-      });
+      return res.status(400).json({ success: false, message: "Cover image file is required" });
     }
 
     const vendor = await Vendor.findById(req.user.vendorId);
     if (!vendor) {
-      return res.status(404).json({
-        success: false,
-        message: "Vendor profile not found",
-      });
+      return res.status(404).json({ success: false, message: "Vendor profile not found" });
     }
 
-    // Delete old cover from Cloudinary if exists
-    if (vendor.coverImage) {
-      const publicId = extractCloudinaryPublicId(vendor.coverImage);
-      if (publicId) {
-        await cloudinary.uploader.destroy(publicId).catch(() => {});
-      }
-    }
-
-    const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
-    const result = await cloudinary.uploader.upload(dataUri, {
-      folder: "campus-cravix/vendors/covers",
-      resource_type: "image",
-    });
-
-    vendor.coverImage = result.secure_url;
+    if (vendor.coverImage) await deleteImage(vendor.coverImage);
+    vendor.coverImage = await uploadImage(req.file, "campus-cravix/vendors/covers");
     await vendor.save();
 
     res.json({
@@ -164,10 +129,7 @@ export async function updateCoverImage(req, res) {
   }
 }
 
-/**
- * PUT /vendors/me/profile-pic - Upload profile picture via Cloudinary
- * Expects multipart/form-data with 'profilePic' file field
- */
+// Upload a new profile picture (replaces the old one)
 export async function updateProfilePic(req, res) {
   try {
     if (!req.user.vendorId) {
@@ -178,34 +140,16 @@ export async function updateProfilePic(req, res) {
     }
 
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "Profile picture file is required",
-      });
+      return res.status(400).json({ success: false, message: "Profile picture file is required" });
     }
 
     const vendor = await Vendor.findById(req.user.vendorId);
     if (!vendor) {
-      return res.status(404).json({
-        success: false,
-        message: "Vendor profile not found",
-      });
+      return res.status(404).json({ success: false, message: "Vendor profile not found" });
     }
 
-    if (vendor.profilePic) {
-      const publicId = extractCloudinaryPublicId(vendor.profilePic);
-      if (publicId) {
-        await cloudinary.uploader.destroy(publicId).catch(() => {});
-      }
-    }
-
-    const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
-    const result = await cloudinary.uploader.upload(dataUri, {
-      folder: "campus-cravix/vendors/profile-pics",
-      resource_type: "image",
-    });
-
-    vendor.profilePic = result.secure_url;
+    if (vendor.profilePic) await deleteImage(vendor.profilePic);
+    vendor.profilePic = await uploadImage(req.file, "campus-cravix/vendors/profile-pics");
     await vendor.save();
 
     res.json({
@@ -226,6 +170,7 @@ export async function updateProfilePic(req, res) {
   }
 }
 
+// Checks if opening hours are valid: array of { dayOfWeek, open, close }
 function validateOpeningHours(hours) {
   if (!Array.isArray(hours)) {
     return { valid: false, error: "openingHours must be an array" };
@@ -251,9 +196,4 @@ function validateOpeningHours(hours) {
     });
   }
   return { valid: true, hours: validated };
-}
-
-function extractCloudinaryPublicId(url) {
-  const match = url.match(/\/v\d+\/(.+)\.\w+$/);
-  return match ? match[1] : null;
 }

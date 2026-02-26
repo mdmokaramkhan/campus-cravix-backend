@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { sendOtp, verifyOtp } from "../services/otpService.js";
 
-// 1. User enters phone → we send OTP
+// Send OTP to user's phone so they can log in
 export async function sendOtpHandler(req, res) {
   try {
     const phone = req.body.phone;
@@ -18,7 +18,7 @@ export async function sendOtpHandler(req, res) {
   }
 }
 
-// 2. User enters OTP → we verify, create user if new, return token
+// Check OTP, log user in, and return a token (creates new user if first time)
 export async function verifyOtpHandler(req, res) {
   try {
     const { phone, otp, name } = req.body;
@@ -32,13 +32,13 @@ export async function verifyOtpHandler(req, res) {
       return res.status(400).json({ success: false, message: "Wrong or expired OTP" });
     }
 
-    // Find or create user
+    // If first time, create user in database
     let user = await User.findOne({ phone: phone.trim() });
     if (!user) {
       user = await User.create({ name: name || "User", phone: phone.trim(), role: "student" });
     }
 
-    // Create token
+    // Create login token
     const token = jwt.sign(
       { id: user._id, phone: user.phone, role: user.role, vendorId: user.vendorId || null },
       process.env.JWT_SECRET,
