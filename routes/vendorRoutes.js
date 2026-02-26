@@ -20,6 +20,10 @@ import {
   deleteBanner,
   reorderBanners,
 } from "../controllers/bannerController.js";
+import {
+  listVendorOrders,
+  updateOrderStatus,
+} from "../controllers/orderController.js";
 
 const router = Router();
 
@@ -35,6 +39,9 @@ router.get("/menu", listMenu);
 router.post("/menu", uploadSingle("image"), createMenuItem);
 router.put("/menu/:id", uploadSingle("image"), updateMenuItem);
 router.delete("/menu/:id", deleteMenuItem);
+
+router.get("/orders", listVendorOrders);
+router.patch("/orders/:id/status", updateOrderStatus);
 
 router.get("/banners", listBanners);
 router.post("/banners", uploadSingle("image"), createBanner);
