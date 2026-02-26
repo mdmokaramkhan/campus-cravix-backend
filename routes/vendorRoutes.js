@@ -24,6 +24,14 @@ import {
   listVendorOrders,
   updateOrderStatus,
 } from "../controllers/orderController.js";
+import {
+  listCoupons,
+  createCoupon,
+  updateCoupon,
+  deactivateCoupon,
+  deleteCoupon,
+} from "../controllers/couponController.js";
+import { listVendorReviews } from "../controllers/reviewController.js";
 
 const router = Router();
 
@@ -48,5 +56,13 @@ router.post("/banners", uploadSingle("image"), createBanner);
 router.patch("/banners/reorder", reorderBanners);
 router.put("/banners/:id", uploadSingle("image"), updateBanner);
 router.delete("/banners/:id", deleteBanner);
+
+router.get("/coupons", listCoupons);
+router.post("/coupons", createCoupon);
+router.put("/coupons/:id", updateCoupon);
+router.patch("/coupons/:id/deactivate", deactivateCoupon);
+router.delete("/coupons/:id", deleteCoupon);
+
+router.get("/reviews", listVendorReviews);
 
 export default router;
