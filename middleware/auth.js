@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-
+// Check if user is logged in (has a valid token in the header)
 export function authMiddleware(req, res, next) {
   const header = req.headers.authorization;
 
@@ -8,7 +8,7 @@ export function authMiddleware(req, res, next) {
     return res.status(401).json({ success: false, message: "No token provided" });
   }
 
-  const token = header.split(" ")[1]; // get part after "Bearer "
+  const token = header.split(" ")[1]; // "Bearer xyz123" → "xyz123"
 
   if (!process.env.JWT_SECRET) {
     return res.status(500).json({ success: false, message: "JWT config missing" });
@@ -28,7 +28,7 @@ export function authMiddleware(req, res, next) {
   }
 }
 
-// Check if user is a vendor
+// Make sure user is a vendor (block students from vendor routes)
 export function requireVendor(req, res, next) {
   if (!req.user) {
     return res.status(401).json({ success: false, message: "Login required" });
@@ -39,7 +39,7 @@ export function requireVendor(req, res, next) {
   next();
 }
 
-// Check if user is a student
+// Make sure user is a student (block vendors from student routes)
 export function requireStudent(req, res, next) {
   if (!req.user) {
     return res.status(401).json({ success: false, message: "Login required" });
