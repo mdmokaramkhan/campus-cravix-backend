@@ -1,27 +1,16 @@
 import cloudinary from "../config/cloudinary.js";
 
-// Upload image to Cloudinary. Give it the file and folder name. Returns the image URL.
 export async function uploadImage(file, folder) {
-  if (!file || !file.buffer) {
-    throw new Error("File is required for upload");
-  }
-  if (!folder || typeof folder !== "string") {
-    throw new Error("Folder name is required");
+  if (!file?.buffer || !folder) {
+    throw new Error("File and folder are required");
   }
 
-  try {
-    const base64 = file.buffer.toString("base64");
-    const dataUri = `data:${file.mimetype};base64,${base64}`;
-
-    const result = await cloudinary.uploader.upload(dataUri, {
-      folder,
-      resource_type: "image",
-    });
-
-    return result.secure_url;
-  } catch (err) {
-    throw new Error(err.message || "Failed to upload image to Cloudinary");
-  }
+  const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+  const result = await cloudinary.uploader.upload(dataUri, {
+    folder,
+    resource_type: "image",
+  });
+  return result.secure_url;
 }
 
 // Delete image from Cloudinary using its URL

@@ -50,7 +50,17 @@ export async function verifyOtpHandler(req, res) {
     // Create login token
     const token = createAuthToken(user);
 
-    res.json({ success: true, token, user: { id: user._id, name: user.name, phone: user.phone, role: user.role } });
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+        vendorId: user.vendorId?.toString() ?? null,
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
