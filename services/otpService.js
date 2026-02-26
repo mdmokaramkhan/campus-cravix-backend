@@ -15,14 +15,14 @@ export async function sendOtp(phoneOrEmail, channel = "phone") {
   await Otp.findOneAndUpdate(
     { identifier },
     { otp, expiresAt },
-    { upsert: true, new: true }
+    { upsert: true }
   );
 
   if (channel !== "phone") {
     throw new Error("Only phone OTP delivery is supported");
   }
 
-  const apiKey = process.env.WAPI_API_KEY || process.env.OTP_API_KEY;
+  const apiKey = process.env.WAPI_API_KEY;
   if (!apiKey) {
     throw new Error("WAPI_API_KEY (or OTP_API_KEY) missing in .env");
   }

@@ -13,6 +13,13 @@ import {
   updateMenuItem,
   deleteMenuItem,
 } from "../controllers/menuController.js";
+import {
+  listBanners,
+  createBanner,
+  updateBanner,
+  deleteBanner,
+  reorderBanners,
+} from "../controllers/bannerController.js";
 
 const router = Router();
 
@@ -28,5 +35,11 @@ router.get("/menu", listMenu);
 router.post("/menu", uploadSingle("image"), createMenuItem);
 router.put("/menu/:id", uploadSingle("image"), updateMenuItem);
 router.delete("/menu/:id", deleteMenuItem);
+
+router.get("/banners", listBanners);
+router.post("/banners", uploadSingle("image"), createBanner);
+router.patch("/banners/reorder", reorderBanners);
+router.put("/banners/:id", uploadSingle("image"), updateBanner);
+router.delete("/banners/:id", deleteBanner);
 
 export default router;
