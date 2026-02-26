@@ -1,0 +1,28 @@
+{
+  "name": "campus-cravix",
+  "version": "1.0.0",
+  "description": "A campus-focused food ordering system where students can pre-order meals, select pickup time, and get food ready without waiting.",
+  "keywords": [
+    "campus-focused",
+    "food",
+    "ordering",
+    "pre-order",
+    "meals"
+  ],
+  "license": "ISC",
+  "author": "Mohammad Mokaram Khan",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "nodemon -r dotenv/config server.js",
+    "run": "node -r dotenv/config server.js",
+    "dev": "nodemon -r dotenv/config server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.2"
+  }
+}
